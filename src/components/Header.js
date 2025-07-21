@@ -6,7 +6,7 @@ const Header = ({ darkMode, onToggleTheme }) => {
     <AppBar position="static">
       <Toolbar>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          MUI App
+          Bingo Creator
         </Typography>
         <Switch checked={darkMode} onChange={onToggleTheme} />
       </Toolbar>

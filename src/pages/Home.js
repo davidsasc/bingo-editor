@@ -5,8 +5,8 @@ import BuildIcon from '@mui/icons-material/Build';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 
 // Default values
-const DEFAULT_GRID = 5;
-const DEFAULT_CELL = 240;
+const DEFAULT_GRID = 4;
+const DEFAULT_CELL = 160;
 
 // Maximum constraints
 const MAX_GRID = 7;
@@ -14,7 +14,7 @@ const MAX_CELL = 400;
 
 function Home() {
   // Dynamic grid and cell size
-  const [buildMode, setBuildMode] = useState(false);
+  const [buildMode, setBuildMode] = useState(true);
   const [gridSize, setGridSize] = useState(DEFAULT_GRID);
   const [cellSize, setCellSize] = useState(DEFAULT_CELL);
 
@@ -79,7 +79,7 @@ function Home() {
   return (
     <Box p={4}>
       <Typography variant="h4" align="center" mb={2}>
-        Bingo Editor
+        {buildMode ? "Bingo Editor" : "Play your Bingo!"}
       </Typography>
 
       <Box textAlign="center" mb={3}>
