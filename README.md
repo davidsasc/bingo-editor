@@ -28,7 +28,7 @@ To run your project locally
 
 1. **Clone the repo**  
    ```bash
-   git clone https://github.com/<your-username>/bingo-editor.git
+   git clone https://github.com/davidsasc/bingo-editor.git
    cd bingo-editor
 
 2. **Clone the repo**  
