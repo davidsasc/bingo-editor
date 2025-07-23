@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Box, IconButton, TextField, Typography, Tooltip, useTheme, useMediaQuery } from '@mui/material';
 import BuildIcon from '@mui/icons-material/Build';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import { motion } from 'framer-motion'; // you may remove framer-motion import if not using animations elsewhere
+import { motion } from 'framer-motion'; 
 
 // Defaults & constraints
 const DEFAULT_GRID = 4;
@@ -81,8 +81,6 @@ function Home() {
   };
 
   // Share URL
-  
-
   return (
     <Box p={2}>
       <Typography variant="h4" align="center" mb={2}>
