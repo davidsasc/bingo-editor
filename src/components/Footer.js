@@ -27,7 +27,11 @@ const Footer = () => {
             textDecoration: 'underline',
           }}
         >
-          Source on GitHub.
+          Source on GitHub
+        </Link>
+        . Licensed under{' '}
+        <Link href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">
+          MIT.
         </Link>
       </Typography>
     </Box>
