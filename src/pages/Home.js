@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Box, IconButton, TextField, Typography, Tooltip, useTheme, useMediaQuery } from '@mui/material';
 import BuildIcon from '@mui/icons-material/Build';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import { motion } from 'framer-motion'; 
+import { motion } from 'framer-motion';
 
 // Defaults & constraints
 const DEFAULT_GRID = 4;
@@ -28,59 +28,57 @@ function Home() {
   // Drag index
   const dragSrc = useRef(null);
 
-  // On load: parse URL params
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.has('board')) {
-      const vals = params.get('board').split(',').map(s => s.trim());
-      if (vals.length) setCellValues(vals);
-    }
-    if (params.has('grid')) setGridSize(Math.min(MAX_GRID, parseInt(params.get('grid'),10) || DEFAULT_GRID));
-    if (params.has('cell')) setCellSize(Math.min(MAX_CELL, parseInt(params.get('cell'),10) || DEFAULT_CELL));
-  }, []);
-
-  // Reset arrays when grid changes
+  // Reset when grid changes
   useEffect(() => {
     setCellValues(Array(total).fill(''));
     setCrossed(Array(total).fill(false));
   }, [total]);
 
-  // Toggle build/play, clearing crosses when leaving play
+  // Toggle build/play, clear crosses when leaving play
   const toggleMode = () => {
     if (!buildMode) setCrossed(Array(total).fill(false));
     setBuildMode(m => !m);
   };
 
-  // Handle bulk paste
+  // Bulk paste handler
   const handleList = e => {
     const parts = e.target.value.split(',').map(s => s.trim());
     if (parts.length === total) setCellValues(parts);
   };
 
-  // Drag & swap logic
-  const onDragStart = (_, idx) => (dragSrc.current = idx);
-  const onDragOver = e => e.preventDefault();
-  const onDrop = (_, dest) => {
-    if (dragSrc.current != null && dragSrc.current !== dest) {
-      const swap = arr => {
-        const a = [...arr];
-        [a[dragSrc.current], a[dest]] = [a[dest], a[dragSrc.current]];
-        return a;
-      };
-      setCellValues(swap);
-      setCrossed(swap);
-    }
-    dragSrc.current = null;
-  };
-
-  // Toggle cross
-  const toggleCross = idx => {
-    setCrossed(a => {
-      const c = [...a]; c[idx] = !c[idx]; return c;
+  // Swap two cells
+  const swapCells = (src, dest) => {
+    setCellValues(vals => {
+      const a = [...vals];
+      [a[src], a[dest]] = [a[dest], a[src]];
+      return a;
+    });
+    setCrossed(vals => {
+      const a = [...vals];
+      [a[src], a[dest]] = [a[dest], a[src]];
+      return a;
     });
   };
 
-  // Share URL
+  // Drag & drop handlers
+  const onDragStart = (_, idx) => (dragSrc.current = idx);
+  const onDragOver = e => e.preventDefault();
+  const onDrop = (e, dest) => {
+    e.preventDefault();
+    const src = dragSrc.current;
+    if (src !== null && src !== dest) swapCells(src, dest);
+    dragSrc.current = null;
+  };
+
+  // Toggle cross state
+  const toggleCross = idx => {
+    setCrossed(arr => {
+      const a = [...arr];
+      a[idx] = !a[idx];
+      return a;
+    });
+  };
+
   return (
     <Box p={2}>
       <Typography variant="h4" align="center" mb={2}>
@@ -93,75 +91,121 @@ function Home() {
             {buildMode ? <PlayArrowIcon /> : <BuildIcon />}
           </IconButton>
         </Tooltip>
-        {buildMode && null}
       </Box>
 
       {buildMode && (
-        <Box mb={2} textAlign="center">
-          <TextField
-            label="Paste words"
-            placeholder={`Enter ${total} words, comma-separated`}
-            variant="outlined"
-            size="small"
-            fullWidth
-            onChange={handleList}
-          />
-        </Box>
+        <>
+          {/* Controls for grid and cell size */}
+          <Box display="flex" justifyContent="center" alignItems="center" gap={2} mb={2}>
+            <Tooltip title="Decrease grid size">
+              <IconButton size="small" onClick={() => setGridSize(s => Math.max(1, s - 1))}>
+                –
+              </IconButton>
+            </Tooltip>
+            <TextField
+              label="Grid Size"
+              type="number"
+              size="small"
+              inputProps={{ min: 1, max: MAX_GRID, readOnly: true }}
+              value={gridSize}
+              sx={{ width: 80, textAlign: 'center' }}
+            />
+            <Tooltip title="Increase grid size">
+              <IconButton size="small" onClick={() => setGridSize(s => Math.min(MAX_GRID, s + 1))}>
+                +
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Decrease cell size">
+              <IconButton size="small" onClick={() => setCellSize(s => Math.max(1, s - 10))}>
+                –
+              </IconButton>
+            </Tooltip>
+            <TextField
+              label="Cell Size"
+              type="number"
+              size="small"
+              inputProps={{ min: 1, max: MAX_CELL, readOnly: true }}
+              value={cellSize}
+              sx={{ width: 80, textAlign: 'center' }}
+            />
+            <Tooltip title="Increase cell size">
+              <IconButton size="small" onClick={() => setCellSize(s => Math.min(MAX_CELL, s + 10))}>
+                +
+              </IconButton>
+            </Tooltip>
+          </Box>
+
+          {/* Bulk input of words */}
+          <Box mb={2} textAlign="center">
+            <TextField
+              label={`Paste ${total} comma-separated words`}
+              placeholder={`Enter ${total} words, comma-separated`}
+              variant="outlined"
+              size="small"
+              fullWidth
+              onChange={handleList}
+            />
+          </Box>
+        </>
       )}
 
+      {/* Dynamic grid */}
       <Box
         display="grid"
         gridTemplateColumns={`repeat(${gridSize}, ${isMobile ? '1fr' : cellSize + 'px'})`}
         gap={1}
         justifyContent="center"
       >
-        {cellValues.map((val, idx) => (
-          <Box
-            component={motion.div}
-            layout
-            transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-            key={idx}
-            width={isMobile ? '100%' : cellSize}
-            height={cellSize}
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            border={1}
-            borderColor={crossed[idx] ? 'primary.main' : 'grey.400'}
-            bgcolor={crossed[idx] ? 'rgba(0,0,255,0.1)' : 'transparent'}
-            p={1}
-            draggable={buildMode}
-            onDragStart={buildMode ? e => onDragStart(e, idx) : undefined}
-            onDragOver={buildMode ? onDragOver : undefined}
-            onDrop={buildMode ? e => onDrop(e, idx) : undefined}
-            onClick={!buildMode ? () => toggleCross(idx) : undefined}
-            sx={{
-              cursor: buildMode ? 'move' : 'pointer',
-              userSelect: buildMode ? 'text' : 'none',
-              '&:hover': { boxShadow: 3 },
-              '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main' }
-            }}
-          >
-            {buildMode ? (
-              <TextField
-                value={val}
-                onChange={e => {
-                  const c = [...cellValues]; c[idx] = e.target.value; setCellValues(c);
-                }}
-                variant="outlined"
-                size="small"
-                fullWidth
-              />
-            ) : (
-              <Typography
-                align="center"
-                sx={{ textDecoration: crossed[idx] ? 'line-through' : 'none', fontSize: cellSize * 0.2 }}
-              >
-                {val}
-              </Typography>
-            )}
-          </Box>
-        ))}
+        {cellValues.map((val, idx) => {
+          return (
+            <Box
+              component={motion.div}
+              layout
+              transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+              key={idx}
+              width={isMobile ? '100%' : cellSize}
+              height={cellSize}
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              border={1}
+              borderColor={crossed[idx] ? 'primary.main' : 'grey.400'}
+              bgcolor={crossed[idx] ? 'rgba(0,0,255,0.1)' : 'transparent'}
+              p={1}
+              draggable={buildMode}
+              onDragStart={buildMode ? e => onDragStart(e, idx) : undefined}
+              onDragOver={buildMode ? onDragOver : undefined}
+              onDrop={buildMode ? e => onDrop(e, idx) : undefined}
+              onClick={!buildMode ? () => toggleCross(idx) : undefined}
+              sx={{
+                cursor: buildMode ? 'move' : 'pointer',
+                userSelect: buildMode ? 'text' : 'none',
+                '&:hover': { boxShadow: 3 },
+                '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main' }
+              }}
+            >
+              {buildMode ? (
+                <TextField
+                  value={val}
+                  onChange={e => {
+                    const c = [...cellValues]; c[idx] = e.target.value; setCellValues(c);
+                  }}
+                  variant="outlined"
+                  size="small"
+                  fullWidth
+                />
+              ) : (
+                <Typography
+                  align="center"
+                  sx={{ textDecoration: crossed[idx] ? 'line-through' : 'none', fontSize: cellSize * 0.2 }}
+                >
+                  {val}
+                </Typography>
+              )}
+            </Box>
+          );
+        })}
       </Box>
     </Box>
   );
